@@ -329,7 +329,9 @@ class AppStateManager:
             "system_state": {
                 "chain_initialized": False,
                 "vector_store_initialized": False,
-                "llm_initialized": False
+                "llm_initialized": False,
+                "rag_observability_enabled": False,
+                "zenml_observability_enabled": False
             }
         }
         
@@ -518,7 +520,9 @@ class AppStateManager:
         return self.get("system_state", {
             "chain_initialized": False,
             "vector_store_initialized": False,
-            "llm_initialized": False
+            "llm_initialized": False,
+            "rag_observability_enabled": False,
+            "zenml_observability_enabled": False
         })
     
     def update_system_state(self, **kwargs) -> None:

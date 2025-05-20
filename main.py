@@ -13,6 +13,7 @@ from core.llm.llm_client import LLMClient
 from core.rag.chain_builder import RAGChainBuilder
 from core.rag.rag_pipeline import RAGPipeline
 from core.rag.observability import RagObservability
+from core.rag.zenml_observability import ZenMLObservability
 from ui.state_manager import state_manager
 from fix_vector_store import verify_store_type
 
@@ -72,6 +73,14 @@ def initialize_application() -> Dict[str, Any]:
             rag_observability = RagObservability()
             components["rag_observability"] = rag_observability
             logger.debug("RAG observability initialized successfully")
+
+            # Attempt to initialize ZenML observability as an optional feature
+            try:
+                zenml_observability = ZenMLObservability()
+                components["zenml_observability"] = zenml_observability
+                logger.debug("ZenML observability initialized successfully")
+            except Exception as ze:
+                logger.warning(f"ZenML observability not available: {ze}")
         except Exception as e:
             logger.error(f"Error initializing RAG observability: {str(e)}", exc_info=True)
             errors.append(f"RAG observability initialization error: {str(e)}")
@@ -83,7 +92,13 @@ def initialize_application() -> Dict[str, Any]:
                 # Get observability callback if available
                 observability_callbacks = []
                 if "rag_observability" in components:
-                    observability_callbacks.append(components["rag_observability"].rag_step_callback())
+                    observability_callbacks.append(
+                        components["rag_observability"].rag_step_callback()
+                    )
+                if "zenml_observability" in components:
+                    observability_callbacks.append(
+                        components["zenml_observability"].rag_step_callback()
+                    )
                 
                 rag_pipeline = RAGPipeline(
                     llm=components["llm_client"],
@@ -151,7 +166,8 @@ def update_system_state(components: Dict[str, Any]):
             components["vector_store"]._index_exists()
         ),
         "chain_initialized": "rag_chain" in components,
-        "rag_observability_enabled": "rag_observability" in components
+        "rag_observability_enabled": "rag_observability" in components,
+        "zenml_observability_enabled": "zenml_observability" in components
     }
     
     state_manager.update_system_state(**system_state)
